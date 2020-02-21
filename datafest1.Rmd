@@ -1,0 +1,135 @@
+---
+title: "datafest1"
+author: "me"
+date: "March 29, 2019"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(TTR)
+library(ggplot2)
+```
+
+```{r}
+wellness.df <- read.csv("wellness.csv", header = T)
+rpe.df <- read.csv("rpe.csv", header = T)
+```
+
+```{r}
+#wellness.ts <- subset(wellness.df, PlayerID == "1")
+#wellness.ts <- subset(wellness.ts, select = c(Date,Fatigue))
+wellness.ts <- subset(wellness.df, select = c(Date,Fatigue))
+plot(wellness.ts, type = "l")
+wellness.df$Date <- as.Date(wellness.df$Date, format = "%Y-%m-%d")
+rpe.df$Date <- as.Date(rpe.df$Date, format = "%Y-%m-%d")
+boxplot(SleepHours~Fatigue,data=wellness.df, main="Fatigue vs. SleepHours", xlab="Fatigue", ylab="Sleep")
+boxplot(Soreness~Fatigue,data=wellness.df, main="Fatigue vs. Soreness", xlab="Fatigue", ylab="Soreness")
+boxplot(Desire~Fatigue,data=wellness.df, main="Fatigue vs. Desire", xlab="Fatigue", ylab="Desire")
+```
+
+```{r}
+# merge
+merge.df <- merge(wellness.df, rpe.df, by=c("Date","PlayerID"))
+merge.df$Fatigue <- as.numeric(merge.df$Fatigue)
+# remove NA from SessionType
+merge.df <- merge.df[!is.na(merge.df$SessionType),]
+# add record id
+merge.df <- mutate(merge.df, RecordID = rownames(merge.df))
+fit.1 <- lm (Fatigue ~ Desire + ObjectiveRating + FocusRating + BestOutOfMyself + Nutrition + Menstruation + SessionType + DailyLoad + SleepQuality, data = merge.df)
+summary(fit.1)
+```
+
+```{r}
+change.df <- merge.df
+nrow(subset(change.df, SessionType == 'Strength'))
+
+combat <- subset(change.df, select = c("Date","PlayerID","SessionType","RecordID"), SessionType == 'Combat')
+levels(combat$SessionType) <- c(1,0,0,0,0,0,0)
+colnames(combat)[which(names(combat) == "SessionType")] <- "CombatTrain"
+
+cond <- subset(change.df, select = c("Date","PlayerID","SessionType","RecordID"), SessionType == 'Conditioning')
+levels(cond$SessionType) <- c(0,1,0,0,0,0,0)
+colnames(cond)[which(names(cond) == "SessionType")] <- "CondTrain"
+
+game <- subset(change.df, select = c("Date","PlayerID","SessionType","RecordID"), SessionType == 'Game')
+levels(game$SessionType) <- c(0,0,1,0,0,0,0)
+colnames(game)[which(names(game) == "SessionType")] <- "GameTrain"
+
+mobrec <- subset(change.df, select = c("Date","PlayerID","SessionType","RecordID"), SessionType == 'Mobility/Recovery')
+levels(mobrec$SessionType) <- c(0,0,0,1,0,0,0)
+colnames(mobrec)[which(names(mobrec) == "SessionType")] <- "MobRecTrain"
+
+skill <- subset(change.df, select = c("Date","PlayerID","SessionType","RecordID"), SessionType == 'Skills')
+levels(skill$SessionType) <- c(0,0,0,0,1,0,0)
+colnames(skill)[which(names(cond) == "SessionType")] <- "SkillsTrain"
+
+speed <- subset(change.df, select = c("Date","PlayerID","SessionType","RecordID"), SessionType == 'Speed')
+levels(speed$SessionType) <- c(0,0,0,0,0,1,0)
+colnames(speed)[which(names(cond) == "SessionType")] <- "SpeedTrain"
+
+str <- subset(change.df, select = c("Date","PlayerID","SessionType","RecordID"), SessionType == 'Strength')
+levels(str$SessionType) <- c(0,0,0,0,0,0,1)
+colnames(str)[which(names(cond) == "SessionType")] <- "StrTrain"
+
+# merging all df and remove sessiontype from main dataframe
+change.df$SessionType <- NULL
+change.df <- merge(change.df, combat, by=c("Date","PlayerID","RecordID"), all = TRUE)
+change.df <- merge(change.df, cond, by=c("Date","PlayerID","RecordID"), all = TRUE)
+change.df <- merge(change.df, game, by=c("Date","PlayerID","RecordID"), all = TRUE)
+change.df <- merge(change.df, mobrec, by=c("Date","PlayerID","RecordID"), all = TRUE)
+change.df <- merge(change.df, skill, by=c("Date","PlayerID","RecordID"), all = TRUE)
+change.df <- merge(change.df, speed, by=c("Date","PlayerID","RecordID"), all = TRUE)
+change.df <- merge(change.df, str, by=c("Date","PlayerID","RecordID"), all = TRUE)
+
+# RStudio did not change column names from skill, speed, str
+colnames(change.df)[which(names(change.df) == "SessionType.x")] <- "SkillsTrain"
+colnames(change.df)[which(names(change.df) == "SessionType.y")] <- "SpeedTrain"
+colnames(change.df)[which(names(change.df) == "SessionType")] <- "StrTrain"
+
+change.df$CombatTrain[is.na(change.df$CombatTrain)]<-0
+change.df$CondTrain[is.na(change.df$CondTrain)]<-0 
+change.df$GameTrain[is.na(change.df$GameTrain)]<-0 
+change.df$MobRecTrain[is.na(change.df$MobRecTrain)]<-0 
+change.df$SkillsTrain[is.na(change.df$SkillsTrain)]<-0 
+change.df$SpeedTrain[is.na(change.df$SpeedTrain)]<-0 
+change.df$StrTrain[is.na(change.df$StrTrain)]<-0 
+
+levels(change.df$CombatTrain) <- c("Yes","No")
+levels(change.df$CondTrain) <- c("No","Yes")
+levels(change.df$GameTrain) <- c("No","Yes")
+levels(change.df$MobRecTrain) <- c("No","Yes")
+levels(change.df$SkillsTrain) <- c("No","Yes")
+levels(change.df$SpeedTrain) <- c("No","Yes")
+levels(change.df$StrTrain) <- c("No","Yes")
+
+```
+
+```{r}
+# change.df ls
+fit.final <- lm(Fatigue ~ Desire + SleepQuality + Nutrition + Menstruation + SessionType + DailyLoad, data = merge.df)
+summary(fit.final)
+fit.final <- lm(Fatigue ~ MobRecTrain + Desire + SleepQuality + DailyLoad, data = change.df)
+summary(fit.final)
+plot(fit.final)
+hist(fit.final$residuals,main = "Histogram of Residuals", xlab = "Residuals")
+```
+
+
+
+
+```{r}
+# change.df ls (Session Type only) **** no good
+#summary(lm(Fatigue~SessionType,data=merge.df))
+# NA coming up for StrTrain below
+#summary(lm(Fatigue~CombatTrain+CondTrain+GameTrain+MobRecTrain+SkillsTrain+SpeedTrain+StrTrain,data=change.df))
+
+# fit final 2
+fit.final2 <- lm(Fatigue ~ Desire + SleepQuality + Nutrition + Menstruation + SessionType + DailyLoad, data = merge.df)
+summary(fit.final2)
+fit.final2 <- lm(Fatigue ~ Desire + SleepQuality +GameTrain+MobRecTrain + DailyLoad, data = change.df)
+summary(fit.final2)
+#pred.model <- predict(data = change.df, fit.final)
+plot(fit.final2)
+```
