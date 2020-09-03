@@ -4,7 +4,7 @@
 #### Involved Canadian National Women's Rugby Team Dataset
 #### *Disclaimer* cannot post csv file due to Canadian National Women's Rugby Team Organization request the data to be not public
 
-### Variables:
+## Variables:
 #### SleepHours
 #### Fatigue
 #### Desire
@@ -14,7 +14,7 @@
 #### SessionType
 #### etc.
 
-# Objective: Find value in the data to see what causes fatigue in the athletes
+## Objective: Find value in the data to see what causes fatigue in the athletes
 
 ## Data Visualization
 
