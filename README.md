@@ -1,11 +1,8 @@
 # 5CollegeDatafest
-## Programmed in R in RStudio
-
-##Worked in a team of 3 at a data science hackathlon
-
-## Involved Canadian National Women's Rugby Team Dataset
-
-# *Disclaimer* cannot post csv file due to Canadian National Women's Rugby Team Organization request the data to be not public
+#### Programmed in R in RStudio
+#### Worked in a team of 3 at a data science hackathlon
+#### Involved Canadian National Women's Rugby Team Dataset
+#### *Disclaimer* cannot post csv file due to Canadian National Women's Rugby Team Organization request the data to be not public
 
 ### Variables:
 #### SleepHours
